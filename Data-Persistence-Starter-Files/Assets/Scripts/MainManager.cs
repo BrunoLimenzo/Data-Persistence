@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class MainManager : MonoBehaviour
     public int LineCount = 6;
     public Rigidbody Ball;
 
+    public Text _highscoreText;
     public Text ScoreText;
     public GameObject GameOverText;
     
@@ -18,10 +20,13 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
+    int _highScore;
     
     // Start is called before the first frame update
     void Start()
     {
+        LoadData();
+        _highscoreText.text = "Best Score: " + _highScore.ToString();
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -72,5 +77,34 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        if(m_Points > _highScore)
+        SaveData();
+    }
+
+    [System.Serializable]
+    class Data
+    {
+        public int highScore;       
+    }
+
+    public void SaveData()
+    {
+        var data = new Data();
+        data.highScore = m_Points;
+
+        var json = JsonUtility.ToJson(data);
+        File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
+    }
+
+    public void LoadData()
+    {
+        string path = Application.persistentDataPath + "/savefile.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            Data data = JsonUtility.FromJson<Data>(json);
+
+            _highScore = data.highScore;
+        }
     }
 }
